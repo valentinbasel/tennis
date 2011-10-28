@@ -1,4 +1,5 @@
-#! /usr/bin/env python
+
+# -*- coding: utf-8 -*-
 """Skeleton project file mainloop for new OLPCGames users"""
 import olpcgames, logging #pygame 
 from olpcgames import pausescreen
@@ -18,6 +19,9 @@ FONDO=(198,233,185)
 LINEA=(255,255,255)
 log = logging.getLogger( 'icaro run' )
 log.setLevel( logging.DEBUG )
+size = width, height = 840, 480
+screen = pygame.display.set_mode(size)
+clock = pygame.time.Clock()
 class reloj(pygame.sprite.Sprite):
     def __init__(self):
         self.unidad=1
@@ -33,7 +37,7 @@ class Text:
         self.size = FontSize
  
     def render(self,  text, color, pos):
-        text = unicode(text, "UTF-8")
+        #text = unicode(text, "UTF-8")
         x, y = pos
         for i in text.split("\r"):
             cancha.display.blit(self.font.render(i, 1, color), (x, y))
@@ -146,7 +150,7 @@ class personaje_2(pygame.sprite.Sprite):
     def update(self):
         #self.rect[1]=self.y
         cancha.display.blit(self.imagen,(self.rect))
-        self.rect[0]=self.rect[0]-pelota.velocidad_x
+        #
         
         if (self.rect[0]<=320):
             self.imagen = pygame.image.load("imagen/rojo_iz.png")
@@ -161,21 +165,44 @@ class personaje_2(pygame.sprite.Sprite):
         if (self.rect.colliderect(pelota.rect)):
             pelota.velocidad_y=6
             pelota.velocidad_x=velocidad
+        self.inteligencia()
+    def inteligencia(self):
+        #self.rect[0]=self.rect[0]-pelota.velocidad_x
+        if self.rect[0]<pelota.rect[0]:
+            self.rect[0]=self.rect[0]+6
+        if self.rect[0]>pelota.rect[0]:
+            self.rect[0]=self.rect[0]-6
         if (self.contador==50):
             self.azar=random.randint(1, 200)
             self.contador=0
-            print self.azar
         else:
             self.contador=self.contador+1
-        if(self.azar<=70):
-            self.rect[1]=self.rect[1]-1  
-            if (self.rect[1]<=20):
-                self.rect[1]=29
-                
-        if(self.azar>=150):
-            self.rect[1]=self.rect[1]+1
-            if (self.rect[1]>=210):
-                self.rect[1]=109
+        if(self.azar<=110):
+            avance=1
+        else: 
+            avance =-1
+        self.rect[1]+=avance
+        if self.rect[1]>=400:
+            avance=avance*-1
+        if self.rect[1]<=20:
+            avance=avance*-1
+#        if pelota.velocidad_y<0 and pelota.rect[1]>100:
+#                           
+#            if (self.contador==50):
+#                self.azar=random.randint(1, 200)
+#                self.contador=0
+#            else:
+#                self.contador=self.contador+1
+#            if(self.azar<=110):
+#                self.rect[1]=self.rect[1]-1  
+#                if (self.rect[1]<=20):
+#                    self.rect[1]=29
+#                    
+#            if(self.azar>=150):
+#                self.rect[1]=self.rect[1]+1
+#                if (self.rect[1]>=210):
+#                    self.rect[1]=109
+
 class cajas(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
@@ -197,12 +224,12 @@ class bola(pygame.sprite.Sprite):
     velocidad_y=9
     valor=0
     valor2=0
-    def __init__(self):
+    def __init__(self,xx,yy):
         pygame.sprite.Sprite.__init__(self)
         self.imagen = pygame.image.load("imagen/bola.png")
         self.rect = self.imagen.get_rect()
-        self.x=self.rect[0]=100
-        self.y=self.rect[1]=150
+        self.x=self.rect[0]=xx
+        self.y=self.rect[1]=yy
    
     def update(self):
         self.x=self.x+self.velocidad_x*-1
@@ -236,26 +263,37 @@ class bola(pygame.sprite.Sprite):
 cronometro=reloj()                  
 c = Capture()
 c.calibrate()
-
 persona=personaje()
 persona2=personaje_2()
-pelota=bola()
+pelota=bola(100,150)
 clock = pygame.time.Clock()
 cancha=fondo()
 text = Text()
 caja1=cajas()
 quit = False
-cur=cursor(100,40)
+cur=cursor(100,15)
 men=menu(140,40)
-def primero():
+def menu_principal():
     seleccion=True
     while seleccion==True:
-        men.actualizar(text)
-        cur.actualizar(cancha)
+        for event in pygame.event.get():
+           pass 
 
+        cancha.display.fill(FONDO)
+        valor=cur.actualizar(cancha)
+        men.actualizar(text)
+        if pygame.key.get_pressed()[pygame.K_RETURN]:
+
+            if valor==1:
+                juego()
+            if valor==2:
+                calibracion()
+            if valor==3:
+                sys.exit()
         pygame.display.update()
 
-def  inicial():
+
+def  calibracion():
     calibrado=False
 
     while calibrado==False:
@@ -272,25 +310,41 @@ def  inicial():
         caja1.update()
         pygame.display.update()
         
+def juego():
 
-def main():
-    """The mainloop which is specified in the activity.py file
-    
-    "main" is the assumed function name
-    """
-    size = (1300,800)
-    if olpcgames.ACTIVITY:
-        size = olpcgames.ACTIVITY.game_size
-    screen = pygame.display.set_mode(size)
-    
-    clock = pygame.time.Clock()
-    primero()
-    inicial()
 
+    partido=1
+    while partido<=3:
+        pelota.valor=0
+        pelota.valor2=0
+        pelota.marcador="0 - 0"
+        cancha.display.fill(FONDO)
+        cancha.lineas()
+        text.render("set "+str(partido), (0,255,0), (300, 220))
+        pygame.display.flip()
+        pygame.time.delay(1000)
+        ganador=game()
+        print partido
+        if ganador==1:
+            partido +=1
+        if partido ==3:
+            pelota.valor=0
+            pelota.valor2=0
+            pelota.marcador="0 - 0"
+            cancha.display.fill(FONDO)
+            cancha.lineas()
+            text.render("perdiste!!!", (255,0,0), (300, 220))
+            pygame.display.flip()
+            pygame.time.delay(1000)
+            return 0
+    
+
+        
+def game():
     running = True
     while running:
         screen.fill( (0,0,0))
-        milliseconds = clock.tick(15) # maximum number of frames per second
+        milliseconds = clock.tick(40) # maximum number of frames per second
         
         # Event-management loop with support for pausing after X seconds (20 here)
         #events = pausescreen.get_events()
@@ -299,8 +353,9 @@ def main():
     
             if event.type == pygame.QUIT:
                 sys.exit()
-            if event.type == MOUSEBUTTONDOWN:    
-                c.calibrate()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    return 0
         cancha.display.fill(FONDO)
         c.get()
         #c.umbral()
@@ -309,10 +364,21 @@ def main():
         pelota.update()
         cancha.lineas()
         text.render(pelota.marcador, (0,0,255), (640, 100))
-        cronometro.update()
-
-
+        #cronometro.update()
+        if pelota.valor==7:
+            return 1
         pygame.display.flip()
+def main():
+    """The mainloop which is specified in the activity.py file
+    
+    "main" is the assumed function name
+    """
+    if olpcgames.ACTIVITY:
+        size = olpcgames.ACTIVITY.game_size
+    menu_principal()
+
+
+
             
 
 if __name__ == "__main__":
